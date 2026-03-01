@@ -1,0 +1,8 @@
+supabase password --
+community board - supa@GB1991@Community
+
+-- api creds --
+
+project url: https://jejpuavmgughjjpdffkg.supabase.co
+Publishable API key : sb_publishable_Z6CnTnnZlRHRjOKH9qkTIA_hzWyvhx5
+	// will be using as Aton key
