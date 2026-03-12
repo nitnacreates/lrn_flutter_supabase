@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:data_supabase/auth.dart';
+import 'package:data_supabase/post.dart';
 import 'package:domain/auth.dart';
+import 'package:domain/post.dart';
 import 'package:go_router/go_router.dart';
 import 'package:injectable/injectable.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -15,7 +19,7 @@ abstract class RegisterModule {
   @singleton
   GoRouter router(AuthenticationBloc authBloc) => createRouter(authBloc);
 
-  // --- Data Layer Registration (LazySingleton) ---
+  // ------------ Data Layer Registration (LazySingleton) ------------
   // auth
   @LazySingleton(as: AuthRemoteDataSource)
   SupabaseAuthRemoteDataSource get authRemoteDataSource;
@@ -23,7 +27,14 @@ abstract class RegisterModule {
   @LazySingleton(as: AuthRepository)
   AuthRepositoryImpl get authRepository;
 
-  // --- Domain Layer (UseCases) Registration (Injectable - factory) ---
+  // post
+  @LazySingleton(as: PostRemoteDataSource)
+  SupabasePostRemoteDataSource get postRemoteDataSource;
+
+  @LazySingleton(as: PostRepository)
+  PostRepositoryImpl get postRepository;
+
+  // ------------ Domain Layer (UseCases) Registration (Injectable - factory) ------------
   @injectable
   SignupUseCase get signupUseCase;
 
@@ -32,4 +43,14 @@ abstract class RegisterModule {
 
   @injectable
   LogoutUseCase get logoutUseCase;
+
+  // post
+  @injectable
+  GetPostsUseCase get getPostsUseCase;
+
+  @injectable
+  CreatePostUseCase get createPostUseCase;
+
+  @injectable
+  UploadPostImageUseCase get uploadPostImageUseCase;
 }
