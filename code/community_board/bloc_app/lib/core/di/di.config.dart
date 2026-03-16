@@ -10,7 +10,9 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:data_supabase/auth.dart' as _i561;
+import 'package:data_supabase/post.dart' as _i816;
 import 'package:domain/auth.dart' as _i378;
+import 'package:domain/post.dart' as _i456;
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:go_router/go_router.dart' as _i583;
 import 'package:injectable/injectable.dart' as _i526;
@@ -20,6 +22,15 @@ import '../../features/auth/presentation/blocs/authentication/authentication_blo
     as _i652;
 import '../../features/auth/presentation/blocs/login/login_bloc.dart' as _i1018;
 import '../../features/auth/presentation/blocs/signup/signup_bloc.dart' as _i41;
+import '../../features/post/presentation/blocs/comment_list/comment_list_bloc.dart'
+    as _i1009;
+import '../../features/post/presentation/blocs/post_detail/post_detail_bloc.dart'
+    as _i169;
+import '../../features/post/presentation/blocs/post_form/post_form_bloc.dart'
+    as _i79;
+import '../../features/post/presentation/blocs/post_list/post_list_bloc.dart'
+    as _i409;
+import '../bus/global_event_bus.dart' as _i91;
 import 'register_module.dart' as _i291;
 
 extension GetItInjectableX on _i174.GetIt {
@@ -30,11 +41,19 @@ extension GetItInjectableX on _i174.GetIt {
   }) {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
     final registerModule = _$RegisterModule(this);
+    gh.singleton<_i91.GlobalEventBus>(
+      () => _i91.GlobalEventBus(),
+      dispose: (i) => i.dispose(),
+    );
     gh.singleton<_i454.SupabaseClient>(() => registerModule.supabaseClient);
     gh.lazySingleton<_i561.AuthRemoteDataSource>(
       () => registerModule.authRemoteDataSource,
     );
+    gh.lazySingleton<_i816.PostRemoteDataSource>(
+      () => registerModule.postRemoteDataSource,
+    );
     gh.lazySingleton<_i378.AuthRepository>(() => registerModule.authRepository);
+    gh.lazySingleton<_i456.PostRepository>(() => registerModule.postRepository);
     gh.factory<_i378.SignupUseCase>(() => registerModule.signupUseCase);
     gh.factory<_i378.LoginUseCase>(() => registerModule.loginUseCase);
     gh.factory<_i378.LogoutUseCase>(() => registerModule.logoutUseCase);
@@ -51,8 +70,69 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i1018.LoginBloc>(
       () => _i1018.LoginBloc(loginUseCase: gh<_i378.LoginUseCase>()),
     );
+    gh.factory<_i456.GetPostsUseCase>(() => registerModule.getPostsUseCase);
+    gh.factory<_i456.CreatePostUseCase>(() => registerModule.createPostUseCase);
+    gh.factory<_i456.UploadPostImageUseCase>(
+      () => registerModule.uploadPostImageUseCase,
+    );
+    gh.factory<_i456.GetPostDetailUseCase>(
+      () => registerModule.getPostDetailUseCase,
+    );
+    gh.factory<_i456.GetCommentsUseCase>(
+      () => registerModule.getCommentsUseCase,
+    );
+    gh.factory<_i456.ToggleLikeUseCase>(() => registerModule.toggleLikeUseCase);
+    gh.factory<_i456.CreateCommentUseCase>(
+      () => registerModule.createCommentUseCase,
+    );
+    gh.factory<_i456.DeleteCommentUseCase>(
+      () => registerModule.deleteCommentUseCase,
+    );
+    gh.factory<_i456.UpdateCommentUseCase>(
+      () => registerModule.updateCommentUseCase,
+    );
+    gh.factory<_i456.DeletePostUseCase>(() => registerModule.deletePostUseCase);
+    gh.factory<_i456.DeletePostFolderUseCase>(
+      () => registerModule.deletePostFolderUseCase,
+    );
+    gh.factory<_i456.UpdatePostUseCase>(() => registerModule.updatePostUseCase);
+    gh.factory<_i79.PostFormBloc>(
+      () => _i79.PostFormBloc(
+        createPostUseCase: gh<_i456.CreatePostUseCase>(),
+        uploadPostImageUseCase: gh<_i456.UploadPostImageUseCase>(),
+        updatePostUseCase: gh<_i456.UpdatePostUseCase>(),
+        getPostDetailUseCase: gh<_i456.GetPostDetailUseCase>(),
+        globalEventBus: gh<_i91.GlobalEventBus>(),
+      ),
+    );
+    gh.factory<_i409.PostListBloc>(
+      () => _i409.PostListBloc(
+        getPostsUseCase: gh<_i456.GetPostsUseCase>(),
+        toggleLikeUseCase: gh<_i456.ToggleLikeUseCase>(),
+        globalEventBus: gh<_i91.GlobalEventBus>(),
+      ),
+    );
+    gh.factory<_i1009.CommentListBloc>(
+      () => _i1009.CommentListBloc(
+        getCommentsUseCase: gh<_i456.GetCommentsUseCase>(),
+        createCommentUseCase: gh<_i456.CreateCommentUseCase>(),
+        deleteCommentUseCase: gh<_i456.DeleteCommentUseCase>(),
+        updateCommentUseCase: gh<_i456.UpdateCommentUseCase>(),
+        getPostDetailUseCase: gh<_i456.GetPostDetailUseCase>(),
+        globalEventBus: gh<_i91.GlobalEventBus>(),
+      ),
+    );
     gh.singleton<_i583.GoRouter>(
       () => registerModule.router(gh<_i652.AuthenticationBloc>()),
+    );
+    gh.factory<_i169.PostDetailBloc>(
+      () => _i169.PostDetailBloc(
+        getPostDetailUseCase: gh<_i456.GetPostDetailUseCase>(),
+        toggleLikeUseCase: gh<_i456.ToggleLikeUseCase>(),
+        deletePostUseCase: gh<_i456.DeletePostUseCase>(),
+        deletePostFolderUseCase: gh<_i456.DeletePostFolderUseCase>(),
+        globalEventBus: gh<_i91.GlobalEventBus>(),
+      ),
     );
     return this;
   }
@@ -70,8 +150,19 @@ class _$RegisterModule extends _i291.RegisterModule {
       );
 
   @override
+  _i816.SupabasePostRemoteDataSource get postRemoteDataSource =>
+      _i816.SupabasePostRemoteDataSource(
+        supabaseClient: _getIt<_i454.SupabaseClient>(),
+      );
+
+  @override
   _i561.AuthRepositoryImpl get authRepository => _i561.AuthRepositoryImpl(
     authRemoteDataSource: _getIt<_i561.AuthRemoteDataSource>(),
+  );
+
+  @override
+  _i816.PostRepositoryImpl get postRepository => _i816.PostRepositoryImpl(
+    postRemoteDataSource: _getIt<_i816.PostRemoteDataSource>(),
   );
 
   @override
@@ -85,4 +176,64 @@ class _$RegisterModule extends _i291.RegisterModule {
   @override
   _i378.LogoutUseCase get logoutUseCase =>
       _i378.LogoutUseCase(authRepository: _getIt<_i378.AuthRepository>());
+
+  @override
+  _i456.GetPostsUseCase get getPostsUseCase =>
+      _i456.GetPostsUseCase(postRepository: _getIt<_i456.PostRepository>());
+
+  @override
+  _i456.CreatePostUseCase get createPostUseCase =>
+      _i456.CreatePostUseCase(postRepository: _getIt<_i456.PostRepository>());
+
+  @override
+  _i456.UploadPostImageUseCase get uploadPostImageUseCase =>
+      _i456.UploadPostImageUseCase(
+        postRepository: _getIt<_i456.PostRepository>(),
+      );
+
+  @override
+  _i456.GetPostDetailUseCase get getPostDetailUseCase =>
+      _i456.GetPostDetailUseCase(
+        postRepository: _getIt<_i456.PostRepository>(),
+      );
+
+  @override
+  _i456.GetCommentsUseCase get getCommentsUseCase =>
+      _i456.GetCommentsUseCase(postRepository: _getIt<_i456.PostRepository>());
+
+  @override
+  _i456.ToggleLikeUseCase get toggleLikeUseCase =>
+      _i456.ToggleLikeUseCase(postRepository: _getIt<_i456.PostRepository>());
+
+  @override
+  _i456.CreateCommentUseCase get createCommentUseCase =>
+      _i456.CreateCommentUseCase(
+        postRepository: _getIt<_i456.PostRepository>(),
+      );
+
+  @override
+  _i456.DeleteCommentUseCase get deleteCommentUseCase =>
+      _i456.DeleteCommentUseCase(
+        postRepository: _getIt<_i456.PostRepository>(),
+      );
+
+  @override
+  _i456.UpdateCommentUseCase get updateCommentUseCase =>
+      _i456.UpdateCommentUseCase(
+        postRepository: _getIt<_i456.PostRepository>(),
+      );
+
+  @override
+  _i456.DeletePostUseCase get deletePostUseCase =>
+      _i456.DeletePostUseCase(postRepository: _getIt<_i456.PostRepository>());
+
+  @override
+  _i456.DeletePostFolderUseCase get deletePostFolderUseCase =>
+      _i456.DeletePostFolderUseCase(
+        postRepository: _getIt<_i456.PostRepository>(),
+      );
+
+  @override
+  _i456.UpdatePostUseCase get updatePostUseCase =>
+      _i456.UpdatePostUseCase(postRepository: _getIt<_i456.PostRepository>());
 }

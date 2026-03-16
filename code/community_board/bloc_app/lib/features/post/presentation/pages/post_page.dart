@@ -154,7 +154,9 @@ class _PostViewState extends State<PostView> {
                     return PostCard(
                       post: post,
                       onToggleLike: () {
-                        context.read<PostListBloc>().add();
+                        context.read<PostListBloc>().add(
+                          PostLikeToggled(post: post),
+                        );
                       },
                     );
                   },
